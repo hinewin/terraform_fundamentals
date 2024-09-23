@@ -1,0 +1,41 @@
+#!/bin/bash
+
+
+########################
+## DEFAULT pre-commit ##
+########################
+
+# Check if this is the initial commit
+if git rev-parse --verify HEAD >/dev/null 2>&1; then
+    # Creating a new commit
+    against=HEAD
+else
+    # Initial commit (diff against an empty tree object)
+    against=$(git hash-object -t tree /dev/null)
+fi
+
+# If you want to allow non-ASCII filenames set this variable to true.
+allownonascii=$(git config --type=bool hooks.allownonascii)
+
+# Redirect output to stderr.
+exec 1>&2
+
+#######################
+### Terraform fmt ####
+#######################
+
+# Get all changed .tf files' directories
+tf_dir_changed=$(git diff --name-only --diff-filter=ACMRT --cached $against | grep .tf$ | xargs -r -L 1 dirname | sort -u)
+
+# Run terraform fmt on all directories with changes
+if command -v terraform version &> /dev/null; then
+    echo "[pre-commit hook] Running terraform fmt..."
+    for dir in $tf_dir_changed; do
+        for file in $(terraform fmt $dir); do
+            git add $file
+            echo "[pre-commit hook] - Formatted: $file"
+        done
+    done
+else
+    echo "[pre-commit hook] Skipping running terraform fmt because terraform was not found"
+fi
