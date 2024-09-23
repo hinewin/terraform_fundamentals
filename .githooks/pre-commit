@@ -28,17 +28,23 @@ exec 1>&2
 tf_dir_changed=$(git diff --name-only --diff-filter=ACMRT --cached $against | grep .tf$ | xargs -r -L 1 dirname | sort -u)
 
 # Run terraform fmt on all directories with changes
+tf_fmt_required = false
+
 if command -v terraform version &> /dev/null; then
     echo 'Checking format of Terraform files'
     for dir in $tf_dir_changed; do
         echo "Checking formatting for .tf files in ${dir}"
         terraform fmt -write=false -diff -check "${dir}"
         if [ $? -ne 0 ]; then
+            tf_fmt_required=true
             echo "Formatting .tf files in ${dir}"
             terraform fmt "{$dir}"
             git add "${dir}/*.tf"
         fi
     done
+    if [ "$tf_fmt_required" = false ]; then
+        echo "No Terraform files require formatting"
+    fi
 else
     echo "[pre-commit hook] Skipping running terraform fmt because terraform was not found"
 fi
