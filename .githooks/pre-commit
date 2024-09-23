@@ -28,7 +28,7 @@ exec 1>&2
 tf_dir_changed=$(git diff --name-only --diff-filter=ACMRT --cached $against | grep .tf$ | xargs -r -L 1 dirname | sort -u)
 
 # Run terraform fmt on all directories with changes
-tf_fmt_required = false
+tf_fmt_required=false
 
 if command -v terraform version &> /dev/null; then
     echo 'Checking format of Terraform files'
