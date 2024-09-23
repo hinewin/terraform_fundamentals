@@ -31,7 +31,7 @@ tf_dir_changed=$(git diff --name-only --diff-filter=ACMRT --cached $against | gr
 tf_fmt_required=false
 
 if command -v terraform version &> /dev/null; then
-    echo 'Checking format of Terraform files'
+    echo 'Checking format of Terraform files...'
     for dir in $tf_dir_changed; do
         echo "Checking formatting for .tf files in ${dir}"
         terraform fmt -write=false -diff -check "${dir}"
